@@ -1,38 +1,27 @@
 const std = @import("std");
+const vec3 = @import("./vec3.zig").vec3;
+const color = @import("./color.zig");
 
 pub fn main() !void {
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const width = 256;
+    const height = 256;
 
-    const image_width = 256;
-    const image_height = 256;
+    const stdout = std.io.getStdOut().writer();
 
-    try stdout.print("P3\n", .{});
-    try stdout.print("{d} {d}\n", .{ image_width, image_height });
-    try stdout.print("255\n", .{});
+    // PPM header
+    try stdout.print("P3\n{} {}\n255\n", .{ width, height });
 
-    const delta = 255.999;
+    // Image data
+    for (0..height) |j| {
+        for (0..width) |i| {
+            const r = @as(f64, @floatFromInt(i)) / (width - 1);
+            const g = @as(f64, @floatFromInt(j)) / (height - 1);
+            const b = 0;
 
-    var j: u32 = 0;
-    while (j < image_height) : (j += 1) {
-        var i: u32 = 0; // Reset i for each row
-        std.debug.print("\rScan lines Remaining: {d} ", .{(image_height - j)});
-        while (i < image_width) : (i += 1) {
-            const r: f32 = @as(f32, @floatFromInt(i)) / @as(f32, @floatFromInt(image_width - 1));
-            const g: f32 = @as(f32, @floatFromInt(j)) / @as(f32, @floatFromInt(image_height - 1));
-            const b: f32 = 0.0;
-
-            const ir: u32 = @intFromFloat(delta * r);
-            const ig: u32 = @intFromFloat(delta * g);
-            const ib: u32 = @intFromFloat(delta * b);
-
-            try stdout.print("{d} {d} {d}\n", .{ ir, ig, ib });
+            try color.writeColor(stdout, color.color.init(r, g, b));
         }
     }
-
     std.debug.print("\rDone     \n", .{});
-    try bw.flush(); // don't forget to flush!
 }
 
 test "simple test" {
